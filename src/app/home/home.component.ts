@@ -1,38 +1,98 @@
-import { AppService } from './state/app.service';
-import { DataStream } from './state/dataStream.model';
-import { AppQuery } from './state/app.query';
+import { MessageService } from './messageState/message.service';
+import { AppService } from './appState/app.service';
+import { Message } from './messageState/message.model';
+import { AppModel, CountryCounter } from './appState/app.model'
+import { MessageQuery } from './messageState/message.query';
+import { AppQuery } from './appState/app.query';
 import { Component, OnInit } from '@angular/core';
-import { Observable } from 'rxjs';
-import { FormControl } from '@angular/forms';
-import { switchMap, startWith, tap } from 'rxjs/operators';
+import { Observable, timer } from 'rxjs';
+import PubNub from 'pubnub'
 
 @Component({
-  templateUrl: './home.component.html'
+  templateUrl: './home.component.html',
+  styleUrls: ['./home.component.scss']
 })
+
 export class HomeComponent implements OnInit {
-  dataStreams$: Observable<DataStream[]>;
+  messages$: Observable<Message[]>;
   selectLoading$: Observable<boolean>;
-  sortControl = new FormControl('price');
+  appModel$: Observable<AppModel>;
+  messagesByCountry$: Observable<CountryCounter[]>
+  hashTagFilter$: Observable<string>;
 
   constructor(
     private appQuery: AppQuery,
-    private appService: AppService
-  ) {}
+    private appService: AppService,
+    private messageService: MessageService,
+    private messageQuery: MessageQuery,
+
+  ) { }
 
   ngOnInit() {
-    this.dataStreams$ = this.sortControl.valueChanges.pipe(
-      startWith<keyof DataStream>('price'),
-      switchMap(sortBy => {
-        return this.appQuery.selectAll({ sortBy: sortBy });
-      })
-    );
-    this.selectLoading$ = this.appQuery.selectLoading();
-    this.getBooks();
+
+    this.appService.setInitialState();
+    this.messages$ = this.messageQuery.getByHashTag();
+    this.messagesByCountry$ = this.appQuery.getOrderedByCountryCounter();
+    this.appModel$ = this.appQuery.selectFirst();
+    this.hashTagFilter$ = this.appQuery.getHashTagFilter();
+    var self = this;
+
+    var messagesCount = 0;
+    var messageCountPerMinute = 0;
+    var counting = true;
+    var messages: Array<Message> = [];
+
+    const pubnub = new PubNub({
+      subscribeKey: 'sub-c-78806dd4-42a6-11e4-aed8-02ee2ddab7fe'
+    });
+
+    pubnub.subscribe({
+      channels: ['pubnub-twitter']
+    });
+
+    pubnub.addListener({
+      message: function ({ message }) {
+        var messageObject: Message = {
+          id: message.id,
+          author: message.user.name,
+          text: message.text,
+          profile_url: message.user.profile_image_url_https,
+          country: message.place ? message.place.country || "" : "",
+          username: message.user.screen_name
+        };
+        messages = [...messages, messageObject]
+
+        messagesCount++;
+        messageCountPerMinute++;
+
+        self.setMessages(messages);
+        self.setCount(messagesCount, messageObject.country);
+
+        if (counting) {
+          timer(60000).subscribe(x => {
+            counting = true;
+            self.logLastMinuteMessages(messageCountPerMinute);
+            messageCountPerMinute = 0;
+          });
+        }
+        counting = false;
+      }
+    });
   }
 
-  getBooks() {
-    if (true ) {
-      this.appService.getBooks();
-    }
+  setMessages(messages) {
+    this.messageService.setMessages(messages);
+  }
+
+  setHashTagFilter(text) {
+    this.messageQuery.setFilter(text);
+  }
+
+  setCount(messagesCount, messageCountry) {
+    this.appService.setCount(messagesCount, messageCountry);
+  }
+
+  logLastMinuteMessages(messagesCount) {
+    this.appService.logLastMinuteMessages(messagesCount);
   }
 }

@@ -1,27 +1,38 @@
 <div class="container">
-  <h1>Books</h1>
+  <h1>Messages</h1>
+ 
 
-  <div class="alert alert-info" role="alert" *ngIf="selectLoading$ | async; else dataStreams">
-    Fetching Books...
+
+  <div class="alert alert-info" role="alert" *ngIf="selectLoading$ | async; else messages">
+    Fetching Messages...
   </div>
 
-  <ng-template #dataStreams>
-    <select class="custom-select" [formControl]="sortControl">
-      <option>Sort By</option>
-      <option value="name">Name</option>
-      <option value="price">Price</option>
-    </select>
-
-    <section class="flex">
-      <div class="card" *ngFor="let book of dataStreams$ | async">
-        <div class="card-body">
-          <h5 class="card-title">{{ book.name }}
-            <span class="badge badge-info">{{book.price}}$</span>
-          </h5>
-          <a class="btn btn-outline-info btn-sm" [routerLink]="[ '/books', book.id]">See More</a>
+  <ng-template #messages>
+    <div *ngIf="appModel$ | async as model">
+      <h1>Total messages : {{model.messagesCount}}</h1>
+      <p> Messages per minute average : {{model.messagesPerMinuteAverage}}</p>
+      <div class="country-list-container">
+        <h3> Top Country by posted messages </h3>
+        <li *ngFor="let message of messagesByCountry$ | async">
+          {{ message.id }} = {{ message.counter }}
+        </li>
+      </div>
+    </div>
+    
+    <div class="hashtag-searcher-container">
+      <input type="text" #hashTagFilter placeholder="Search by hashtag or word">
+      <button (click)="setHashTagFilter(hashTagFilter.value)">Submit</button>
+    </div>
+    <div class="messages-container">
+      <div class="twitter-post" *ngFor="let message of messages$ | async">
+        <img class="twitter-post-image" src="{{message.profile_url}}" />
+        <div class="twitter-post-body">
+          <span class="card-title"> @{{ message.username }} : </span>
+          <span class="badge badge-info">{{message.text}}$</span>
         </div>
       </div>
-    </section>
+
+    </div>
 
   </ng-template>
 

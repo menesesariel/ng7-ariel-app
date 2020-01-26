@@ -1,0 +1,35 @@
+.hashtag-searcher-container{
+    padding: 10px;
+}
+.country-list-container{
+    padding: 10px;
+    min-height: 100px;
+    height: 150px;
+}
+.messages-container{
+    height: 400px;
+    overflow-y: auto;
+    padding: 10px;
+    border: black solid 1px;
+    .twitter-post{
+        display:grid;
+        grid-template-columns: 40px 600px;
+        border: aqua solid 2px;
+        border-radius: 4px;
+        padding: 5px;
+        margin-bottom: 5px;
+    
+    
+        .twitter-post-image{
+            margin-top: calc( 50% - 20px);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+        .twitter-post-body{
+            padding: 10px 12px;
+        }
+        
+    }
+}
+

@@ -1,16 +1,15 @@
 import { Injectable } from '@angular/core';
 import { EntityState, EntityStore, StoreConfig } from '@datorama/akita';
-import { DataStream } from './dataStream.model';
+import { AppModel } from './app.model';
 
-export interface AppState extends EntityState<DataStream> {}
+export interface AppState extends EntityState<AppModel> {}
 
 @Injectable({ providedIn: 'root' })
 @StoreConfig({ name: 'dataStreams' })
-export class AppStore extends EntityStore<AppState, DataStream> {
+export class AppStore extends EntityStore<AppState, AppModel> {
 
   constructor() {
     super();
   }
 
 }
-

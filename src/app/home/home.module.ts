@@ -6,4 +6,4 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule, ReactiveFormsModule],
   declarations: []
 })
-export class BooksModule {}
+export class MessagesModule {}
