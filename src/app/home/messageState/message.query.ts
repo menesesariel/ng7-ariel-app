@@ -21,7 +21,7 @@ export class MessageQuery extends QueryEntity<MessageState, Message> {
                     return y.text.includes(this.filter);
                 });
             }
-            return messages;
+            return messages.slice(Math.max(messages.length - 100, 1));
         }));
         
         return filteredMessages;
